@@ -3,7 +3,13 @@
   "name": "WeWeb CSS Variables Autocomplete",
   "version": "1.0",
   "description": "Provides autocomplete suggestions for CSS variables in WeWeb Editor",
-  "permissions": ["activeTab"],
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
   "content_scripts": [
     {
       "matches": ["*://editor.weweb.io/*"],
