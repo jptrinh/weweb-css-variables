@@ -1,26 +1,53 @@
-const cssVariables = [
-    "--gray-0: #f8f9fa"
-];
-
 class Autocomplete {
     constructor() {
         this.container = null;
         this.targetInput = null;
         this.suggestions = [];
         this.selectedIndex = -1;
-        this.processedVariables = this.processCssVariables();
-
-        this.init();
+        this.processedVariables = [];
+        
+        // Initialize with config loading
+        this.loadConfiguration().then(() => {
+            this.init();
+        });
     }
 
-    processCssVariables() {
-        return cssVariables.map(variable => {
-            const [name, value] = variable.split(': ');
-            return {
-                name: name,
-                value: value
-            };
+    async loadConfiguration() {
+        return new Promise((resolve) => {
+            chrome.storage.sync.get('variablesSource', async (data) => {
+                if (data.variablesSource) {
+                    try {
+                        const response = await fetch(data.variablesSource);
+                        const variables = await response.json();
+                        this.processedVariables = this.processCssVariables(variables);
+                    } catch (error) {
+                        console.error('Error loading CSS variables:', error);
+                        this.processedVariables = [];
+                    }
+                }
+                resolve();
+            });
         });
+    }
+
+    processCssVariables(variables) {
+        // Expect variables to be an array of objects with format: { name: "--var-name", value: "#color" }
+        // or an array of strings with format: "--var-name: #color"
+        if (Array.isArray(variables)) {
+            return variables.map(variable => {
+                if (typeof variable === 'string') {
+                    const [name, value] = variable.split(': ');
+                    return { name, value };
+                }
+                return variable;
+            });
+        }
+        return [];
+    }
+
+    async reloadVariables() {
+        await this.loadConfiguration();
+        this.handleInput(); // Refresh suggestions if input is active
     }
 
     init() {
@@ -209,4 +236,11 @@ class Autocomplete {
 }
 
 // Initialize the autocomplete when the page loads
-new Autocomplete();
+const autocomplete = new Autocomplete();
+
+// Listen for configuration changes
+chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace === 'sync' && changes.variablesSource) {
+        autocomplete.reloadVariables();
+    }
+});
