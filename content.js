@@ -29,36 +29,6 @@ class Autocomplete {
         this.container.style.display = 'none';
         document.body.appendChild(this.container);
 
-        // Add styles for the color preview if not already added
-        if (!document.getElementById('ww-autocomplete-styles')) {
-            const styles = document.createElement('style');
-            styles.id = 'ww-autocomplete-styles';
-            styles.textContent = `
-                .ww-autocomplete-item {
-                    padding: 8px 12px;
-                    cursor: pointer;
-                }
-                .ww-autocomplete-item.selected {
-                    background-color: rgba(0, 0, 0, 0.05);
-                }
-                .ww-autocomplete-item-content {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                }
-                .ww-autocomplete-color-preview {
-                    width: 16px;
-                    height: 16px;
-                    border-radius: 4px;
-                    border: 1px solid rgba(0, 0, 0, 0.1);
-                }
-                .ww-autocomplete-text {
-                    flex: 1;
-                }
-            `;
-            document.head.appendChild(styles);
-        }
-
         // Add event listeners
         document.addEventListener('focusin', this.handleFocus.bind(this));
         document.addEventListener('keydown', this.handleKeydown.bind(this));
