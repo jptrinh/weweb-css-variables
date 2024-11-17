@@ -133,9 +133,33 @@ class Autocomplete {
 
     parseVariable(variableString) {
         const [name, value] = variableString.split(': ');
+        const trimmedValue = value.trim();
+        
+        // Check if the value references another variable
+        const varMatch = trimmedValue.match(/var\((--[\w-]+)\)/);
+        if (varMatch) {
+            const referencedVar = varMatch[1];
+            // Find the referenced variable in our variables list
+            const referencedValue = this.variables.find(v => {
+                const [varName] = v.split(': ');
+                return varName.trim() === referencedVar;
+            });
+            
+            if (referencedValue) {
+                // Get the actual color value from the referenced variable
+                const [, hexValue] = referencedValue.split(': ');
+                return {
+                    name: name.trim(),
+                    value: hexValue.trim(),
+                    reference: referencedVar // Optionally keep track of the reference
+                };
+            }
+        }
+
+        // If not a reference or reference not found, return the direct value
         return {
             name: name.trim(),
-            value: value.trim()
+            value: trimmedValue
         };
     }
 
