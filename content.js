@@ -15,7 +15,7 @@ class Autocomplete {
     // 2. Core Initialization & Loading
     init() {
         this.container = document.createElement('div');
-        this.container.className = 'ww-autocomplete-container ww-scroll-bar';
+        this.container.className = 'autocomplete-container ww-scroll-bar';
         this.container.style.display = 'none';
         document.body.appendChild(this.container);
 
@@ -168,10 +168,10 @@ class Autocomplete {
             .map((suggestion, index) => {
                 const color = this.parseVariable(suggestion);
                 return `
-                    <div class="ww-autocomplete-item ${index === this.selectedIndex ? 'selected' : ''}"
+                    <div class="autocomplete-item ${index === this.selectedIndex ? 'selected' : ''}"
                          data-index="${index}">
-                        <div class="ww-color-preview" style="background-color: ${color.value}"></div>
-                        <div class="ww-variable-name">${color.name}</div>
+                        <div class="color-preview" style="background-color: ${color.value}"></div>
+                        <div class="variable-name">${color.name}</div>
                     </div>
                 `;
             })

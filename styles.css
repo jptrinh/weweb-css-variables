@@ -1,4 +1,4 @@
-.ww-autocomplete-container {
+.autocomplete-container {
   position: absolute;
   max-height: 200px;
   pointer-events: inherit;
@@ -13,11 +13,7 @@
   overflow: auto;
 }
 
-.ww-autocomplete-container::-webkit-scrollbar {
-  background: #FFFFFF33 transparent;
-}
-
-.ww-autocomplete-item {
+.autocomplete-item {
   display: flex;
   align-items: center;
   width: 100%;
@@ -33,15 +29,15 @@
   gap: 8px;
 }
 
-.ww-autocomplete-item:hover {
+.autocomplete-item:hover {
   background: var(--ww-color-bg-brand-secondary);
 }
 
-.ww-autocomplete-item.selected {
+.autocomplete-item.selected {
   background: var(--ww-color-bg-brand-secondary);
 }
 
-.ww-color-preview {
+.color-preview {
   width: 16px;
   height: 16px;
   border-radius: 4px;
@@ -49,7 +45,7 @@
   flex-shrink: 0;
 }
 
-.ww-variable-name {
+.variable-name {
   flex-grow: 1;
   font-family: monospace;
   font-size: 13px;
