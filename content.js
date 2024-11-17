@@ -149,7 +149,8 @@ class Autocomplete {
                 variable.toLowerCase().includes(searchValue)
             );
         }
-        this.selectedIndex = -1;
+        // Set first item as selected if there are suggestions
+        this.selectedIndex = this.suggestions.length > 0 ? 0 : -1;
     }
 
     showSuggestions() {
@@ -200,10 +201,8 @@ class Autocomplete {
                 const isAbove = elementRect.top < containerRect.top;
                 const isBelow = elementRect.bottom > containerRect.bottom;
 
-                if (isAbove) {
-                    selectedElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-                } else if (isBelow) {
-                    selectedElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                if (isAbove || isBelow) {
+                    selectedElement.scrollIntoView({ block: 'nearest', behavior: 'auto' });
                 }
             }
         }
