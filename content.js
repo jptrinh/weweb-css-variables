@@ -181,7 +181,9 @@ class Autocomplete {
                     .replace(/^-{0,2}/, '')
                     .toLowerCase();
                 
-                return cleanName.startsWith(searchValue);
+                // Split the name into words and check if any word starts with the search value
+                const words = cleanName.split(/[-_]/);
+                return words.some(word => word.startsWith(searchValue));
             });
         }
         this.selectedIndex = this.suggestions.length > 0 ? 0 : -1;
