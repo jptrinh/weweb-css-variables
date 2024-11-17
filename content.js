@@ -144,12 +144,22 @@ class Autocomplete {
         if (!value) {
             this.suggestions = [...this.variables];
         } else {
-            const searchValue = value.replace(/["']/g, '').toLowerCase();
-            this.suggestions = this.variables.filter(variable =>
-                variable.toLowerCase().includes(searchValue)
-            );
+            // Clean up search value: remove quotes, optional dashes at start
+            const searchValue = value
+                .replace(/["']/g, '') // remove quotes
+                .replace(/^-{0,2}/, '') // remove up to two dashes at the start
+                .toLowerCase();
+
+            this.suggestions = this.variables.filter(variable => {
+                // Get the variable name and clean it the same way
+                const { name } = this.parseVariable(variable);
+                const cleanName = name
+                    .replace(/^-{0,2}/, '')
+                    .toLowerCase();
+                
+                return cleanName.startsWith(searchValue);
+            });
         }
-        // Set first item as selected if there are suggestions
         this.selectedIndex = this.suggestions.length > 0 ? 0 : -1;
     }
 
