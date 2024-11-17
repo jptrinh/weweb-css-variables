@@ -7,7 +7,6 @@ class Autocomplete {
         this.variables = []; // Initialize empty variables array
 
         this.loadVariables().then(() => {
-            console.log('Variables loaded:', this.variables);
             this.init();
         });
     }
@@ -17,7 +16,6 @@ class Autocomplete {
             chrome.storage.sync.get('cssVariables', (data) => {
                 if (data.cssVariables) {
                     this.variables = data.cssVariables;
-                    console.log('Loaded variables from storage:', this.variables);
                 }
                 resolve();
             });
@@ -33,12 +31,10 @@ class Autocomplete {
                 variable.toLowerCase().includes(searchValue)
             );
         }
-        console.log('Filtered suggestions:', this.suggestions);
         this.selectedIndex = -1;
     }
 
     async reloadVariables() {
-        console.log('Reloading variables...');
         await this.loadVariables();
         if (this.targetInput) {
             this.handleInput();
@@ -94,7 +90,6 @@ class Autocomplete {
 
     handleInput() {
         const value = this.targetInput.textContent || '';
-        console.log('Input value:', value);
         this.filterSuggestions(value);
         this.showSuggestions();
     }
@@ -107,17 +102,13 @@ class Autocomplete {
         };
     }
 
-    showSuggestions() {
-        console.log('Showing suggestions:', this.suggestions);
-        
+    showSuggestions() {       
         if (!this.suggestions || !this.suggestions.length) {
-            console.log('No suggestions to show');
             this.container.style.display = 'none';
             return;
         }
 
         const rect = this.targetInput.getBoundingClientRect();
-        
         this.container.style.top = `${rect.bottom + window.scrollY}px`;
         this.container.style.left = `${rect.left + window.scrollX}px`;
         this.container.style.width = `${rect.width}px`;
@@ -139,7 +130,6 @@ class Autocomplete {
         this.container.querySelectorAll('.ww-autocomplete-item').forEach(item => {
             item.addEventListener('click', () => {
                 const index = parseInt(item.dataset.index);
-                console.log('Suggestion clicked:', index);
                 this.selectSuggestion(index);
             });
         });
@@ -251,7 +241,6 @@ const autocomplete = new Autocomplete();
 // Listen for messages from popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === 'variablesUpdated') {
-        console.log('Variables updated:', message.variables);
         autocomplete.variables = message.variables;
         autocomplete.handleInput();
         // Send response to avoid connection error
