@@ -1,14 +1,27 @@
 class Autocomplete {
+    // 1. Constructor
     constructor() {
         this.container = null;
         this.targetInput = null;
         this.suggestions = [];
         this.selectedIndex = -1;
-        this.variables = []; // Initialize empty variables array
+        this.variables = [];
 
         this.loadVariables().then(() => {
             this.init();
         });
+    }
+
+    // 2. Core Initialization & Loading
+    init() {
+        this.container = document.createElement('div');
+        this.container.className = 'ww-autocomplete-container ww-scroll-bar';
+        this.container.style.display = 'none';
+        document.body.appendChild(this.container);
+
+        document.addEventListener('focusin', this.handleFocus.bind(this));
+        document.addEventListener('keydown', this.handleKeydown.bind(this));
+        document.addEventListener('click', this.handleClickOutside.bind(this));
     }
 
     async loadVariables() {
@@ -22,18 +35,6 @@ class Autocomplete {
         });
     }
 
-    filterSuggestions(value) {
-        if (!value) {
-            this.suggestions = [...this.variables]; // Use this.variables and create a copy
-        } else {
-            const searchValue = value.replace(/["']/g, '').toLowerCase();
-            this.suggestions = this.variables.filter(variable =>
-                variable.toLowerCase().includes(searchValue)
-            );
-        }
-        this.selectedIndex = -1;
-    }
-
     async reloadVariables() {
         await this.loadVariables();
         if (this.targetInput) {
@@ -41,18 +42,7 @@ class Autocomplete {
         }
     }
 
-    init() {
-        this.container = document.createElement('div');
-        this.container.className = 'ww-autocomplete-container ww-scroll-bar';
-        this.container.style.display = 'none';
-        document.body.appendChild(this.container);
-
-        // Add event listeners
-        document.addEventListener('focusin', this.handleFocus.bind(this));
-        document.addEventListener('keydown', this.handleKeydown.bind(this));
-        document.addEventListener('click', this.handleClickOutside.bind(this));
-    }
-
+    // 3. Event Handlers
     handleFocus(event) {
         if (this.isCSSInput(event.target)) {
             this.targetInput = event.target;
@@ -61,11 +51,65 @@ class Autocomplete {
         }
     }
 
+    handleInput() {
+        const value = this.targetInput.textContent || '';
+        this.filterSuggestions(value);
+        this.showSuggestions();
+    }
+
+    handleKeydown(event) {
+        if (!this.container.style.display || this.container.style.display === 'none') {
+            return;
+        }
+
+        switch (event.key) {
+            case 'ArrowDown':
+                event.preventDefault();
+                if (this.selectedIndex === this.suggestions.length - 1) {
+                    this.selectedIndex = 0;
+                } else {
+                    this.selectedIndex = this.selectedIndex + 1;
+                }
+                this.showSuggestions();
+                this.scrollToSelectedItem();
+                break;
+            case 'ArrowUp':
+                event.preventDefault();
+                if (this.selectedIndex <= 0) {
+                    this.selectedIndex = this.suggestions.length - 1;
+                } else {
+                    this.selectedIndex = this.selectedIndex - 1;
+                }
+                this.showSuggestions();
+                this.scrollToSelectedItem();
+                break;
+            case 'Enter':
+                if (this.selectedIndex >= 0) {
+                    event.preventDefault();
+                    this.selectSuggestion(this.selectedIndex);
+                }
+                break;
+            case 'Escape':
+                this.container.style.display = 'none';
+                break;
+        }
+    }
+
+    handleClickOutside(event) {
+        if (!this.container.contains(event.target) && event.target !== this.targetInput) {
+            this.container.style.display = 'none';
+            if (this.observer) {
+                this.observer.disconnect();
+            }
+        }
+    }
+
+    // 4. Setup & Utility Methods
     setupContentObserver() {
         if (this.observer) {
             this.observer.disconnect();
         }
-    
+
         this.observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 if (mutation.type === 'characterData' || mutation.type === 'childList') {
@@ -73,25 +117,18 @@ class Autocomplete {
                 }
             });
         });
-    
+
         this.observer.observe(this.targetInput, {
             characterData: true,
             childList: true,
             subtree: true
         });
-    
-        // Add input event listener to catch all text changes
+
         this.targetInput.addEventListener('input', this.handleInput.bind(this));
     }
 
     isCSSInput(element) {
         return element.classList.contains('ww-formula-input');
-    }
-
-    handleInput() {
-        const value = this.targetInput.textContent || '';
-        this.filterSuggestions(value);
-        this.showSuggestions();
     }
 
     parseVariable(variableString) {
@@ -102,7 +139,20 @@ class Autocomplete {
         };
     }
 
-    showSuggestions() {       
+    // 5. Suggestion Management
+    filterSuggestions(value) {
+        if (!value) {
+            this.suggestions = [...this.variables];
+        } else {
+            const searchValue = value.replace(/["']/g, '').toLowerCase();
+            this.suggestions = this.variables.filter(variable =>
+                variable.toLowerCase().includes(searchValue)
+            );
+        }
+        this.selectedIndex = -1;
+    }
+
+    showSuggestions() {
         if (!this.suggestions || !this.suggestions.length) {
             this.container.style.display = 'none';
             return;
@@ -113,7 +163,7 @@ class Autocomplete {
         this.container.style.left = `${rect.left + window.scrollX}px`;
         this.container.style.width = `${rect.width}px`;
         this.container.style.display = 'block';
-        
+
         this.container.innerHTML = this.suggestions
             .map((suggestion, index) => {
                 const color = this.parseVariable(suggestion);
@@ -140,63 +190,19 @@ class Autocomplete {
         });
     }
 
-    handleKeydown(event) {
-        if (!this.container.style.display || this.container.style.display === 'none') {
-            return;
-        }
-    
-        switch (event.key) {
-            case 'ArrowDown':
-                event.preventDefault();
-                if (this.selectedIndex === this.suggestions.length - 1) {
-                    // If at the last item, loop to the first
-                    this.selectedIndex = 0;
-                } else {
-                    this.selectedIndex = this.selectedIndex + 1;
-                }
-                this.showSuggestions();
-                this.scrollToSelectedItem();
-                break;
-            case 'ArrowUp':
-                event.preventDefault();
-                if (this.selectedIndex <= 0) {
-                    // If at the first item or no selection, loop to the last
-                    this.selectedIndex = this.suggestions.length - 1;
-                } else {
-                    this.selectedIndex = this.selectedIndex - 1;
-                }
-                this.showSuggestions();
-                this.scrollToSelectedItem();
-                break;
-            case 'Enter':
-                if (this.selectedIndex >= 0) {
-                    event.preventDefault();
-                    this.selectSuggestion(this.selectedIndex);
-                }
-                break;
-            case 'Escape':
-                this.container.style.display = 'none';
-                break;
-        }
-    }
-
     scrollToSelectedItem() {
         if (this.selectedIndex >= 0) {
             const selectedElement = this.container.querySelector(`[data-index="${this.selectedIndex}"]`);
             if (selectedElement) {
-                // Get container's scroll position and dimensions
                 const containerRect = this.container.getBoundingClientRect();
                 const elementRect = selectedElement.getBoundingClientRect();
 
-                // Check if element is outside the visible area
                 const isAbove = elementRect.top < containerRect.top;
                 const isBelow = elementRect.bottom > containerRect.bottom;
 
                 if (isAbove) {
-                    // Scroll element into view at the top
                     selectedElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
                 } else if (isBelow) {
-                    // Scroll element into view at the bottom
                     selectedElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
                 }
             }
@@ -204,15 +210,12 @@ class Autocomplete {
     }
 
     selectSuggestion(index) {
-        // Insert the variable with quotes
         const selectedVariable = this.parseVariable(this.suggestions[index]).name;
         this.targetInput.textContent = `"var(${selectedVariable})"`;
         this.container.style.display = 'none';
 
-        // Set focus back to the div
         this.targetInput.focus();
 
-        // Position cursor at the end
         const range = document.createRange();
         const sel = window.getSelection();
         range.selectNodeContents(this.targetInput);
@@ -220,31 +223,19 @@ class Autocomplete {
         sel.removeAllRanges();
         sel.addRange(range);
 
-        // Dispatch input and change events
         this.targetInput.dispatchEvent(new Event('input', { bubbles: true }));
         this.targetInput.dispatchEvent(new Event('change', { bubbles: true }));
     }
-
-    handleClickOutside(event) {
-        if (!this.container.contains(event.target) && event.target !== this.targetInput) {
-            this.container.style.display = 'none';
-            if (this.observer) {
-                this.observer.disconnect();
-            }
-        }
-    }
 }
 
-// Initialize the autocomplete when the page loads
+// Initialize and setup message listener
 const autocomplete = new Autocomplete();
 
-// Listen for messages from popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === 'variablesUpdated') {
         autocomplete.variables = message.variables;
         autocomplete.handleInput();
-        // Send response to avoid connection error
         sendResponse({ status: 'success' });
     }
-    return true; // Keep the message channel open for async responses
+    return true;
 });
